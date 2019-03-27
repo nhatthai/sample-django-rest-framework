@@ -1,0 +1,4 @@
+*.pyc
+
+devops/volumes_docker
+devops/postgres_data
