@@ -1,0 +1,32 @@
+version: '2'
+
+services:
+  backend:
+    build:
+      context: ../backend
+    command:
+      - python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend/mysite:/code
+    environment:
+      POSTGRES_PASSWORD: pass_dev
+      POSTGRES_USER: user_dev
+      POSTGRES_DB: database_dev
+      POSTGRES_HOST: db
+
+  db:
+    image: postgres:9.5
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./volumes_docker/backups:/backups
+    environment:
+      POSTGRES_PASSWORD: pass_dev
+      POSTGRES_USER: user_dev
+      POSTGRES_DB: database_dev
+      POSTGRES_HOST: db
+    ports:
+      - "5432:5432"
