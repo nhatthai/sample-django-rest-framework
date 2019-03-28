@@ -1,4 +1,12 @@
-*.pyc
-
+# Docker Volumes
 devops/volumes_docker
 devops/postgres_data/*
+
+# python caches
+.mypy_cache
+.idea
+*.pyc
+
+# code editor
+.idea
+.vscode
