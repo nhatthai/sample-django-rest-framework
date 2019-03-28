@@ -1,18 +1,17 @@
 from django.urls import path
-from django.conf.urls import url
-
 from accounts import views
 
-from rest_framework import routers
+from rest_framework.routers import DefaultRouter
 
+router = DefaultRouter()
+router.register('profile-viewset', views.ProfileViewset, base_name='profiles')
 
-df_router = routers.DefaultRouter()
-# df_router.register(
-#     prefix='profiles', viewset=views.ProfileViewset, basename='profiles')
 
 urlpatterns = [
-    path('profiles/', views.profile_list),
-    path('profiles/<int:pk>/', views.profile_detail),
+    path('profiles/', views.ProfileList.as_view()),
+    path('profiles/<int:pk>/', views.ProfileDetail.as_view()),
+    path('users/', views.UserList.as_view()),
+    path('users/<int:pk>/', views.UserDetail.as_view()),
 ]
 
-urlpatterns += df_router.urls
+urlpatterns += router.urls

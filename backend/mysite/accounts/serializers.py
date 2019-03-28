@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'username', 'email')
 
 
-class ProfileSerializer(serializers.Serializer):
+class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     address = serializers.CharField(allow_blank=True, max_length=500)
     short_bio = serializers.CharField(allow_blank=True, max_length=255)
@@ -19,6 +19,13 @@ class ProfileSerializer(serializers.Serializer):
     class Meta:
         model = Profile
         fields = ('id', 'address', 'short_bio', 'user')
+
+    @classmethod
+    def setup_eager_loading(cls, queryset):
+        """ Perform necessary eager loading of data. """
+        # select_related for "to-one" relationships
+        queryset = queryset.select_related('user')
+        return queryset
 
     def validate(self, data):
         return data

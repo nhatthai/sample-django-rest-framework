@@ -1,15 +1,13 @@
-# from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404
+from django.contrib.auth.models import User
 
-from rest_framework import viewsets, status
-from rest_framework.parsers import JSONParser
+from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
-# from rest_framework.views import APIView
+from rest_framework.views import APIView
 
 from accounts.models import Profile
-from accounts.serializers import ProfileSerializer
+from accounts.serializers import ProfileSerializer, UserSerializer
 
 
 # Create your views here.
@@ -18,7 +16,7 @@ class ProfileViewset(viewsets.ModelViewSet):
     API View for Profile
     """
     serializer_class = ProfileSerializer
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.select_related('user').all()
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def create(self, request, *args, **kwargs):
@@ -56,51 +54,68 @@ class ProfileViewset(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@csrf_exempt
-def profile_list(request):
+class ProfileList(APIView):
     """
-    List all code profile, or create a new snippet.
+    List all profiles, or create a new profile
     """
-    if request.method == 'GET':
-        profiles = Profile.objects.all()
+    # def get_queryset(self):
+    #     queryset = Profile.objects.select_related('user').all()
+    #     # Set up eager loading to avoid N+1 selects
+    #     queryset = self.get_serializer_class().setup_eager_loading(queryset)
+    #     return queryset
+
+    def get(self, request, format=None):
+        profiles = Profile.objects.select_related('user').all()
         serializer = ProfileSerializer(profiles, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        return Response(serializer.data)
 
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = ProfileSerializer(data=data)
+    def post(self, request, format=None):
+        serializer = ProfileSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=201)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return JsonResponse(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
-def profile_detail(request, pk):
+class ProfileDetail(APIView):
     """
-    Retrieve, update or delete a profile.
+    Retrieve, update or delete a profile instance
     """
-    try:
-        profile = Profile.objects.get(pk=pk)
-    except Profile.DoesNotExist:
-        return HttpResponse(status=404)
+    def get_object(self, pk):
+        try:
+            return Profile.objects.get(pk=pk)
+        except Profile.DoesNotExist:
+            raise Http404
 
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
+        profile = self.get_object(pk)
         serializer = ProfileSerializer(profile)
-        return JsonResponse(serializer.data)
+        return Response(serializer.data)
 
-    elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        serializer = ProfileSerializer(profile, data=data)
+    def put(self, request, pk, format=None):
+        profile = self.get_object(pk)
+        serializer = ProfileSerializer(profile, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data)
+            return Response(serializer.data)
 
-        return JsonResponse(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
+    def delete(self, request, pk, format=None):
+        profile = self.get_object(pk)
         profile.delete()
-        return HttpResponse(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# Generic Views
+class UserList(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
