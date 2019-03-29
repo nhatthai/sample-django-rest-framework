@@ -1,3 +1,5 @@
+# import json
+
 from django.http import Http404
 from django.contrib.auth.models import User
 
@@ -5,6 +7,8 @@ from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import Profile
 from accounts.serializers import ProfileSerializer, UserSerializer
@@ -20,9 +24,9 @@ class ProfileViewset(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def create(self, request, *args, **kwargs):
-        owner = self.request.user
+        user = self.request.user
 
-        if Profile.objects.filter(user_id=owner.id).exist():
+        if Profile.objects.filter(user_id=user.id).exists():
             return Response(
                 data={'message': 'You had existed an profile'},
                 status=status.HTTP_400_BAD_REQUEST)
@@ -38,7 +42,7 @@ class ProfileViewset(viewsets.ModelViewSet):
             headers=headers)
 
     def perform_create(self, serializer):
-        return serializer.save(owner=self.request.user)
+        return serializer.save(user=self.request.user)
 
     @action(detail=False, methods=['get'])
     def me(self, request):
@@ -58,11 +62,14 @@ class ProfileList(APIView):
     """
     List all profiles, or create a new profile
     """
-    # def get_queryset(self):
-    #     queryset = Profile.objects.select_related('user').all()
-    #     # Set up eager loading to avoid N+1 selects
-    #     queryset = self.get_serializer_class().setup_eager_loading(queryset)
-    #     return queryset
+    # authentication_classes = (SessionAuthentication, BasicAuthentication)
+    # permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = Profile.objects.select_related('user').all()
+        # Set up eager loading to avoid N+1 selects
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
 
     def get(self, request, format=None):
         profiles = Profile.objects.select_related('user').all()
@@ -73,7 +80,7 @@ class ProfileList(APIView):
         serializer = ProfileSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.create(validated_data=request.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
