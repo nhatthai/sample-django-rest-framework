@@ -1,17 +1,65 @@
 # import json
-
+from django.contrib.auth import authenticate, logout
+from django.views.decorators.csrf import csrf_exempt
 from django.http import Http404
 from django.contrib.auth.models import User
 
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status, generics, mixins
+from rest_framework.authentication import (
+    SessionAuthentication, BasicAuthentication, TokenAuthentication)
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.views import APIView
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from accounts.models import Profile
-from accounts.serializers import ProfileSerializer, UserSerializer
+from accounts.serializers import (
+    ProfileSerializer, UserSerializer, CreateUserSerializer)
+
+
+# For login
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def sign_in(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if username is None or password is None:
+        return Response({
+            'error': 'Please provide both username and password'},
+            status=status.HTTP_400_BAD_REQUEST)
+
+    user = authenticate(username=username, password=password)
+
+    if not user:
+        return Response({
+            'error': 'Invalid Credentials'},
+            status=status.HTTP_404_NOT_FOUND)
+
+    existed_token = Token.objects.get(user_id=user.id)
+    return Response(
+        data={
+            'token': existed_token.key,
+            'user_id': user.pk, 'email': user.email},
+        status=status.HTTP_200_OK)
+
+
+# For logout
+class Logout(APIView):
+    def post(self, request, format=None):
+        print("request user", request.user)
+
+        if request.user:
+            # check user's info and logout
+            logout(request)
+        else:
+            return Response({
+                'error': 'You need to login first!'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 # Create your views here.
@@ -62,8 +110,9 @@ class ProfileList(APIView):
     """
     List all profiles, or create a new profile
     """
-    # authentication_classes = (SessionAuthentication, BasicAuthentication)
-    # permission_classes = (IsAuthenticated,)
+    authentication_classes = (
+        SessionAuthentication, BasicAuthentication, TokenAuthentication)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         queryset = Profile.objects.select_related('user').all()
@@ -126,3 +175,11 @@ class UserList(generics.ListCreateAPIView):
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class UserCreate(mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = User.objects.all()
+    serializer_class = CreateUserSerializer
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
