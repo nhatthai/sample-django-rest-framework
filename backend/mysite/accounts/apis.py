@@ -2,7 +2,6 @@ from django.http import Http404
 from django.contrib.auth.models import User
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import filters
 from rest_framework import status, generics, mixins
 from rest_framework.authentication import (
@@ -12,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import Profile
+from accounts.paginations import ProfilePagination
 from accounts.serializers import (
     ProfileSerializer, UserSerializer, CreateUserSerializer)
 
@@ -25,7 +25,7 @@ class ProfileList(generics.ListAPIView):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
     ordering_fields = ('user__first_name', 'user__username')
     ordering = ('user__first_name',)
-    # pagination_class = LimitOffsetPagination
+    pagination_class = ProfilePagination
 
     # def get_queryset(self):
     #     queryset = Profile.objects.select_related('user').all()
