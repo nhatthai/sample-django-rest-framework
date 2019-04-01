@@ -20,7 +20,7 @@ class ProfileList(generics.ListAPIView):
     """
     List all profiles, or create a new profile
     """
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.select_related('user').all()
     serializer_class = ProfileSerializer
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
     ordering_fields = ('user__first_name', 'user__username')

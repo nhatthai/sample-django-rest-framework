@@ -39,13 +39,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ('id', 'address', 'short_bio', 'user')
 
-    # @classmethod
-    # def setup_eager_loading(cls, queryset):
-    #     """ Perform necessary eager loading of data. """
-    #     # select_related for "to-one" relationships
-    #     queryset = queryset.select_related('user')
-    #     return queryset
-
     def validate(self, data):
         return data
 
@@ -53,7 +46,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         address = validated_data.get('address', None)
         short_bio = validated_data.get('short_bio', None)
         user_data = validated_data.pop('user')
-        print("User_data", user_data)
+
         user = CreateUserSerializer.create(
             CreateUserSerializer(), validated_data=user_data)
 
