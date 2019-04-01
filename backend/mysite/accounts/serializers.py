@@ -8,13 +8,15 @@ from accounts.models import Profile
 class CreateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'username', 'password')
+        fields = ('first_name', 'last_name', 'email', 'username', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User(
             email=validated_data['email'],
-            username=validated_data['username']
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -51,8 +53,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         address = validated_data.get('address', None)
         short_bio = validated_data.get('short_bio', None)
         user_data = validated_data.pop('user')
-        user = UserSerializer.create(
-            UserSerializer(), validated_data=user_data)
+        print("User_data", user_data)
+        user = CreateUserSerializer.create(
+            CreateUserSerializer(), validated_data=user_data)
 
         return Profile.objects.create(
             user_id=user.id,
