@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from feeds.models import Feed, Comment
 from feeds.paginations import FeedPagination
 from feeds.serializers import FeedSerializer, CommentSerializer
-from common.paginations import CommonPagination
+from commons.paginations import CommonPagination
 
 from .utils import get_feed
 

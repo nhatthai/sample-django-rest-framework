@@ -1,6 +1,6 @@
 # Define the paginations for resources
-from common import constants
-from common.paginations import CommonPagination
+from commons import constants
+from commons.paginations import CommonPagination
 
 
 class FeedPagination(CommonPagination):

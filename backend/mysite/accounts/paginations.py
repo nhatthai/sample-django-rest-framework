@@ -1,6 +1,6 @@
 # Define the paginations for resources
 from rest_framework import pagination
-from common import constants
+from commons import constants
 
 
 class ProfilePagination(pagination.LimitOffsetPagination):
