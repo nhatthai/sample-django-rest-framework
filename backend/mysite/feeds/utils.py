@@ -1,10 +1,7 @@
-from django.http import Http404
+from django.shortcuts import get_object_or_404
 
 from .models import Feed
 
 
 def get_feed(feed_id):
-    try:
-        return Feed.objects.get(pk=feed_id)
-    except Feed.DoesNotExist:
-        raise Http404
+    get_object_or_404(Feed, id=feed_id)

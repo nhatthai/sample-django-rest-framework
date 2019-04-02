@@ -10,22 +10,23 @@ class EmotionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Emotion
-        fields = ('__all__')
+        fields = ('id', 'name', 'user')
 
 
 class FeedSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     content = serializers.CharField(max_length=255)
     created = serializers.DateTimeField(required=False)
-    emotions = EmotionSerializer(many=True, required=False)  # A nested list of 'edit' items.
+    emotion = EmotionSerializer(many=True, required=False)
 
     class Meta:
         model = Feed
-        fields = ('id', 'content', 'user', 'created', 'emotions')
+        fields = ('id', 'content', 'user', 'created', 'emotion')
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    # user = UserSerializer(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     content = serializers.CharField(max_length=255)
     feed = FeedSerializer(read_only=True)
     created = serializers.DateTimeField(required=False)
