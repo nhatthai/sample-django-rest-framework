@@ -4,4 +4,4 @@ from .models import Feed
 
 
 def get_feed(feed_id):
-    get_object_or_404(Feed, id=feed_id)
+    return get_object_or_404(Feed, id=feed_id)

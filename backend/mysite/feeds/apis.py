@@ -20,7 +20,8 @@ from .utils import get_feed
 
 # Generic Views
 class FeedList(generics.ListCreateAPIView):
-    queryset = Feed.objects.all()
+    queryset = Feed.objects.select_related(
+        'user').prefetch_related('emotion').all()
     serializer_class = FeedSerializer
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
     pagination_class = FeedPagination
@@ -39,6 +40,8 @@ class FeedDetail(APIView):
     """
     Retrieve, update or delete a feed instance
     """
+    queryset = Feed.objects.select_related(
+        'user').prefetch_related('emotion').all()
     authentication_classes = (
         SessionAuthentication, TokenAuthentication)
     permission_classes = (IsAuthenticated,)
@@ -51,11 +54,13 @@ class FeedDetail(APIView):
 
 # Generic Views
 class CommentList(generics.ListCreateAPIView):
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.select_related(
+        'feed', 'feed__user').prefetch_related('feed__emotion').all()
     serializer_class = CommentSerializer
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
     pagination_class = CommonPagination
 
+    # create a comment
     # It works
     # def post(self, request, *args, **kwargs):
     #     serializer = CommentSerializer(data=request.data)
@@ -84,25 +89,41 @@ class CommentList(generics.ListCreateAPIView):
 
     # it works
     def perform_create(self, serializer):
-        data = self.request.data
-        feed_id = data.get('feed_id', None)
+        """
+        create a comment
+        """
+        feed_id = self.kwargs.get('pk')
 
         # check feed exist
         feed = get_feed(feed_id)
 
         serializer.save(user=self.request.user, feed=feed)
 
+    def get_queryset(self):
+        return self.queryset.select_related(
+            'feed', 'feed__user').prefetch_related(
+                'feed__emotion').filter(feed_id=self.kwargs.get('pk'))
+
 
 class CommentDetail(APIView):
     """
     Retrieve, update or delete a comment instance
     """
+    queryset = Comment.objects.select_related(
+        'feed', 'feed__user').prefetch_related('feed__emotion').all()
     authentication_classes = (
         SessionAuthentication, TokenAuthentication)
     permission_classes = (IsAuthenticated, IsCommentOwner)
 
+    def get_queryset(self):
+        return self.queryset.select_related(
+            'feed', 'feed__user').prefetch_related(
+                'feed__emotion').filter(id=self.kwargs.get('pk'))
+
     def get(self, request, pk, format=None):
-        comment = get_object_or_404(Comment, pk=pk)
+        comment = self.queryset.select_related(
+            'feed', 'feed__user').prefetch_related(
+                'feed__emotion').get(pk=pk)
         serializer = CommentSerializer(comment)
         return Response(serializer.data)
 
