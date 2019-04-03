@@ -1,4 +1,3 @@
-# Download from docker cloud of teatime(public)
 FROM nhatthai/django2.1:latest
 
 ADD . /code
