@@ -5,6 +5,7 @@ from feeds.models import Feed, Comment, Emotion
 
 
 class EmotionSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
     user = UserSerializer(read_only=True)
     name = serializers.CharField(max_length=100)
 
@@ -25,7 +26,6 @@ class FeedSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    # user = UserSerializer(read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     content = serializers.CharField(max_length=255)
     feed = FeedSerializer(read_only=True)

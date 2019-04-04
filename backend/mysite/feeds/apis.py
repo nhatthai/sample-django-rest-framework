@@ -1,11 +1,12 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import filters, status, generics, mixins
-from rest_framework.response import Response
 from rest_framework.authentication import (
     SessionAuthentication, TokenAuthentication)
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from feeds.models import Feed, Comment, Emotion
@@ -54,8 +55,6 @@ class FeedDetail(APIView):
 
 # Generic Views
 class CommentList(generics.ListCreateAPIView):
-    queryset = Comment.objects.select_related(
-        'feed', 'feed__user').prefetch_related('feed__emotion').all()
     serializer_class = CommentSerializer
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
     pagination_class = CommonPagination
@@ -109,8 +108,6 @@ class CommentDetail(APIView):
     """
     Retrieve, update or delete a comment instance
     """
-    queryset = Comment.objects.select_related(
-        'feed', 'feed__user').prefetch_related('feed__emotion').all()
     authentication_classes = (
         SessionAuthentication, TokenAuthentication)
     permission_classes = (IsAuthenticated, IsCommentOwner)
@@ -139,20 +136,10 @@ class CommentDetail(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class EmotionDetail(
-        mixins.CreateModelMixin, mixins.DestroyModelMixin,
-        mixins.UpdateModelMixin, generics.GenericAPIView):
+class EmotionList(generics.ListCreateAPIView):
     queryset = Emotion.objects.all()
     serializer_class = EmotionSerializer
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+    # lookup_url_kwarg = "pk"
 
     def perform_create(self, serializer):
         feed_id = self.kwargs.get('pk')
@@ -164,3 +151,52 @@ class EmotionDetail(
 
         feed.emotion.add(emotion)
         feed.save()
+
+
+class EmotionDetail(
+        mixins.DestroyModelMixin,
+        mixins.UpdateModelMixin,
+        generics.GenericAPIView):
+    queryset = Emotion.objects.all()
+    serializer_class = EmotionSerializer
+    lookup_field = "id"
+    lookup_url_kwarg = "pk"
+
+    def get_queryset(self):
+        id = self.kwargs["id"]
+        feed_id = self.kwargs["pk"]
+        return Emotion.objects.get(id=id, feed_id=feed_id)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        serializer = EmotionSerializer(data=request.data)
+
+        feed_id = self.kwargs.get('pk')
+        emotion_id = self.kwargs.get('id')
+
+        # check exist feed
+        get_feed(feed_id)
+
+        if serializer.is_valid():
+            emotion = get_object_or_404(Emotion, pk=emotion_id)
+            serializer.update(emotion, validated_data=request.data)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        emotion_id = self.kwargs.get('id')
+        feed_id = self.kwargs.get('pk')
+
+        # check exist feed
+        get_feed(feed_id)
+
+        emotion = get_object_or_404(Emotion, pk=emotion_id)
+        emotion.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
