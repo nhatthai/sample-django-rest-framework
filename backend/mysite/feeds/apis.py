@@ -157,15 +157,13 @@ class EmotionDetail(
         mixins.DestroyModelMixin,
         mixins.UpdateModelMixin,
         generics.GenericAPIView):
-    queryset = Emotion.objects.all()
     serializer_class = EmotionSerializer
     lookup_field = "id"
     lookup_url_kwarg = "pk"
 
     def get_queryset(self):
         id = self.kwargs["id"]
-        feed_id = self.kwargs["pk"]
-        return Emotion.objects.get(id=id, feed_id=feed_id)
+        return Emotion.objects.select_related('user').get(id=id)
 
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
@@ -174,29 +172,20 @@ class EmotionDetail(
         return self.destroy(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        serializer = EmotionSerializer(data=request.data)
-
-        feed_id = self.kwargs.get('pk')
-        emotion_id = self.kwargs.get('id')
+        instance = self.get_queryset()
 
         # check exist feed
-        get_feed(feed_id)
+        get_feed(self.kwargs.get('pk'))
+
+        serializer = EmotionSerializer(instance, data=request.data)
 
         if serializer.is_valid():
-            emotion = get_object_or_404(Emotion, pk=emotion_id)
-            serializer.update(emotion, validated_data=request.data)
-
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
-        emotion_id = self.kwargs.get('id')
-        feed_id = self.kwargs.get('pk')
-
-        # check exist feed
-        get_feed(feed_id)
-
-        emotion = get_object_or_404(Emotion, pk=emotion_id)
-        emotion.delete()
+        instance = get_object_or_404(Emotion, pk=self.kwargs.get('id'))
+        instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
