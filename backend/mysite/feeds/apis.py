@@ -79,25 +79,25 @@ class CommentDetail(APIView):
     """
     Retrieve, update or delete a comment instance
     """
+    serializer_class = CommentSerializer
     authentication_classes = (
         SessionAuthentication, TokenAuthentication)
     permission_classes = (IsAuthenticated, IsCommentOwner)
 
     def get_queryset(self):
-        return self.queryset.select_related(
+        return Comment.objects.select_related(
             'feed', 'feed__user').prefetch_related(
-                'feed__emotion').filter(id=self.kwargs.get('pk'))
+                'feed__emotion', 'feed__emotion__user').get(
+                    id=self.kwargs.get('pk'))
 
     def get(self, request, pk, format=None):
-        comment = self.queryset.select_related(
-            'feed', 'feed__user').prefetch_related(
-                'feed__emotion').get(pk=pk)
+        comment = self.get_queryset()
         serializer = CommentSerializer(comment)
         return Response(serializer.data)
 
     # Update comment
     def put(self, request, pk, format=None):
-        comment = get_object_or_404(Comment, pk=pk)
+        comment = self.get_queryset()
         serializer = CommentSerializer(comment, data=request.data)
 
         if serializer.is_valid():
@@ -105,6 +105,11 @@ class CommentDetail(APIView):
             return Response(serializer.data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        instance = get_object_or_404(Comment, pk=pk)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class EmotionList(generics.ListCreateAPIView):

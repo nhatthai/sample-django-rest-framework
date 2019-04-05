@@ -12,6 +12,4 @@ urlpatterns = [
     path(
         'feeds/<int:pk>/emotions/<int:id>/',
         apis.EmotionDetail.as_view()),
-
-    # delete comment or update comment
 ]
