@@ -41,16 +41,18 @@ class FeedDetail(APIView):
     """
     Retrieve, update or delete a feed instance
     """
-    queryset = Feed.objects.select_related(
-        'user').prefetch_related('emotion').all()
     authentication_classes = (
         SessionAuthentication, TokenAuthentication)
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, pk, format=None):
-        feed = get_object_or_404(Feed, pk=pk)
+        feed = self.get_queryset()
         serializer = FeedSerializer(feed)
         return Response(serializer.data)
+
+    def get_queryset(self):
+        return Feed.objects.select_related('user').prefetch_related(
+            'emotion', 'emotion__user').get(pk=self.kwargs.get('pk'))
 
 
 # Generic Views
@@ -59,43 +61,12 @@ class CommentList(generics.ListCreateAPIView):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
     pagination_class = CommonPagination
 
-    # create a comment
-    # It works
-    # def post(self, request, *args, **kwargs):
-    #     serializer = CommentSerializer(data=request.data)
-
-    #     # get feed
-    #     feed = get_feed(request.data['feed_id'])
-
-    #     if serializer.is_valid():
-    #         serializer.save(user=request.user, feed=feed)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # It works
-    # def create(self, request, *args, **kwargs):
-    #     serializer = CommentSerializer(data=request.data)
-
-    #     # get feed
-    #     feed = get_feed(request.data['feed_id'])
-
-    #     if serializer.is_valid():
-    #         serializer.save(user=request.user, feed=feed)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # it works
     def perform_create(self, serializer):
         """
         create a comment
         """
-        feed_id = self.kwargs.get('pk')
-
         # check feed exist
-        feed = get_feed(feed_id)
-
+        feed = get_feed(self.kwargs.get('pk'))
         serializer.save(user=self.request.user, feed=feed)
 
     def get_queryset(self):
@@ -137,20 +108,16 @@ class CommentDetail(APIView):
 
 
 class EmotionList(generics.ListCreateAPIView):
-    queryset = Emotion.objects.all()
+    queryset = Emotion.objects.select_related('user').all()
     serializer_class = EmotionSerializer
-    # lookup_url_kwarg = "pk"
+    authentication_classes = (
+        SessionAuthentication, TokenAuthentication)
+    permission_classes = (IsAuthenticated,)
 
     def perform_create(self, serializer):
-        feed_id = self.kwargs.get('pk')
-
-        # check feed exist
-        feed = get_feed(feed_id)
-
+        feed = get_feed(self.kwargs.get('pk'))
         emotion = serializer.save(user=self.request.user)
-
         feed.emotion.add(emotion)
-        feed.save()
 
 
 class EmotionDetail(
@@ -162,8 +129,8 @@ class EmotionDetail(
     lookup_url_kwarg = "pk"
 
     def get_queryset(self):
-        id = self.kwargs["id"]
-        return Emotion.objects.select_related('user').get(id=id)
+        return Emotion.objects.select_related(
+            'user').get(id=self.kwargs["id"])
 
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
