@@ -22,7 +22,7 @@ from .utils import get_feed
 # Generic Views
 class FeedList(generics.ListCreateAPIView):
     queryset = Feed.objects.select_related(
-        'user').prefetch_related('emotion').all()
+        'user').prefetch_related('emotion', 'emotion__user').all()
     serializer_class = FeedSerializer
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
     pagination_class = FeedPagination
