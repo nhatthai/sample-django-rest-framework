@@ -36,13 +36,11 @@ spec:
         - containerPort: 80
           name: web
         volumeMounts:
-        - name: www
+        - name: storage
           mountPath: /usr/share/nginx/html
-  volumeClaimTemplates:
-  - metadata:
-      name: www
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: nginx-storage
+
