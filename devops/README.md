@@ -50,3 +50,36 @@
     $cd devops
     $docker-compose up
     ```
+
+### Ingress
+#### Create Ingress
+```
+$ cd devops/manifest
+$ kubectl create -f ingress.yml
+```
+
+#### Check Ingress status
+```
+kubectl describe ing
+```
+
+#### Start Ingress on Minkube
+```
+$ minikube addons enable ingress
+```
+
+#### Get IP
+```
+$ minikube ip
+192.168.99.100
+```
+
+#### Add mysite.com into /etc/hosts
+```
+192.168.99.100 mysite.com
+```
+
+#### Check Django App
+```
+http://mysite.com/admin/
+```
