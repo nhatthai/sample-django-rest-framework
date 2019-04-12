@@ -13,7 +13,7 @@ spec:
     app: nginx
 
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: web
@@ -43,4 +43,3 @@ spec:
       - name: storage
         persistentVolumeClaim:
           claimName: nginx-storage
-
