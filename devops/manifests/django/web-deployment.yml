@@ -17,6 +17,33 @@ spec:
       containers:
       - name: django
         image: nhatthai/mysite_django2.1:latest
+        command: ['python', 'mysite/manage.py', 'runserver', '0.0.0.0:8000']
         ports:
-        - containerPort: 8000
-          protocol: TCP
+          - containerPort: 8000
+            protocol: TCP
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: mysecret
+                key: POSTGRES_DB
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysecret
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysecret
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: example-config
+                key: DB_SERVICE
+          - name: POSTGRES_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: example-config
+                key: DB_PORT

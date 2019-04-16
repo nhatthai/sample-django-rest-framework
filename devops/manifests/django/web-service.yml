@@ -5,7 +5,7 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    run: web-service
+    app: django
   ports:
     - name: port1
       protocol: TCP

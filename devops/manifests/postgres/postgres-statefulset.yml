@@ -5,7 +5,7 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    run: postgres
+    app: postgres
   ports:
     - protocol: TCP
       port: 5432
@@ -35,18 +35,18 @@ spec:
         env:
           - name: POSTGRES_DB
             valueFrom:
-              configMapKeyRef:
-                name: example-config
+              secretKeyRef:
+                name: mysecret
                 key: POSTGRES_DB
           - name: POSTGRES_USER
             valueFrom:
-              configMapKeyRef:
-                name: example-config
+              secretKeyRef:
+                name: mysecret
                 key: POSTGRES_USER
           - name: POSTGRES_PASSWORD
             valueFrom:
-              configMapKeyRef:
-                name: example-config
+              secretKeyRef:
+                name: mysecret
                 key: POSTGRES_PASSWORD
         volumeMounts:
           - name: postgres-storage
