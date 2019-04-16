@@ -68,6 +68,11 @@ kubectl describe ing
 $ minikube addons enable ingress
 ```
 
+#### Minikube Dashboard
+```
+minikube dashboard
+```
+
 #### Get IP
 ```
 $ minikube ip
