@@ -13,24 +13,8 @@ djangorestframework==3.9.2
 # Configuration
 django-environ==0.4.0
 
-# Django haystack to implement api search
-whoosh==2.7.4
-django-haystack==2.8.1
-
 # JSON WEB TOKEN
 djangorestframework-jwt==1.11.0
-
-# Django Storages
-boto3==1.9.68
-django-storages==1.7.1
-django-imagekit==4.0.2
-
-# Pillow is required when use ImageField
-Pillow==5.3.0
-
-# Django redis
-#django-redis==4.10.0
-#redis==3.0.1
 
 # Factory
 factory-boy==2.11.1
@@ -41,4 +25,3 @@ pyparsing==2.3.1
 python-dateutil==2.8.0
 pytz==2018.9
 requests==2.21.0
-
