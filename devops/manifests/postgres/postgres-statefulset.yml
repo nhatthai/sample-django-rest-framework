@@ -56,12 +56,3 @@ spec:
       - name: postgres-storage
         persistentVolumeClaim:
           claimName: postgres-pv-claim
-
-  # volumeClaimTemplates:
-  # - metadata:
-  #     name: postgres-storage
-  #   spec:
-  #     accessModes: [ "ReadWriteOnce" ]
-  #     resources:
-  #       requests:
-  #         storage: 1Gi
