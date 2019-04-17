@@ -52,6 +52,7 @@
     ```
 
 ### Ingress
+------------
 #### Create Ingress
 ```
 $ cd devops/manifest
@@ -88,3 +89,33 @@ $ minikube ip
 ```
 http://mysite.com/admin/
 ```
+
+
+### HELM
+---------
+
+#### Install Helm
+```
+$ brew install kubernetes-helm
+```
+or
+
+```
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+
+#### Create template
+```
+helm create helm-django
+```
+
+#### Deploy Django with Helm
+```
+$ helm install --name web ./helm-django --set service.type=NodePort
+```
+
+### Reference
+- [Setup Helm](https://docs.bitnami.com/kubernetes/get-started-kubernetes/#step-4-install-helm-and-tiller)
+- [How to create the first helm chart](https://docs.bitnami.com/kubernetes/how-to/create-your-first-helm-chart/)
