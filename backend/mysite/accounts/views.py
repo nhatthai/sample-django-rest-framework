@@ -67,20 +67,20 @@ class ProfileViewset(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         user = self.request.user
 
-        if Profile.objects.filter(user_id=user.id).exists():
+        if Profile.objects.check_profile_exist(user.id):
             return Response(
                 data={'message': 'You had existed an profile'},
                 status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED,
+                headers=headers)
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)

@@ -14,6 +14,12 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+# Apply Custom Model Manager
+class ProfileManager(models.Manager):
+    def check_profile_exist(self, user_id):
+        return self.get_queryset().filter(user_id=user_id)
+
+
 # Create your models here.
 class Profile(TimeStampedModel):
     """Profile model of user."""
@@ -25,3 +31,5 @@ class Profile(TimeStampedModel):
         null=True, blank=True, max_length=500
     )
     address = models.CharField(max_length=255, blank=True)
+
+    objects = ProfileManager()
