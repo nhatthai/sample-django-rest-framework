@@ -18,6 +18,18 @@ class Emotion(TimeStampedModel):
     name = models.CharField(blank=True, null=True, max_length=100)
 
 
+class FeedManager(models.Manager):
+    def get_feed(self, id):
+        return self.get_queryset().filter(
+            id=id, is_delete=False, is_active=True)
+
+    def is_active(self):
+        return self.is_active
+
+    def is_delete(self):
+        return self.is_delete
+
+
 # Create your models here.
 class Feed(TimeStampedModel):
 
@@ -34,6 +46,11 @@ class Feed(TimeStampedModel):
 
     emotion = models.ManyToManyField(
         Emotion, related_name="emotion", null=True, blank=True)
+
+    is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)
+
+    objects = FeedManager()
 
 
 class Comment(TimeStampedModel):
@@ -57,3 +74,5 @@ class Comment(TimeStampedModel):
         help_text='comment for Feed')
 
     content = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)

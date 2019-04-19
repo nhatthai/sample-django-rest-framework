@@ -67,7 +67,8 @@ class CommentList(generics.ListCreateAPIView):
         """
         # check feed exist
         feed = get_feed(self.kwargs.get('pk'))
-        serializer.save(user=self.request.user, feed=feed)
+        if feed:
+            serializer.save(user=self.request.user, feed=feed)
 
     def get_queryset(self):
         return self.queryset.select_related(
@@ -121,8 +122,9 @@ class EmotionList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         feed = get_feed(self.kwargs.get('pk'))
-        emotion = serializer.save(user=self.request.user)
-        feed.emotion.add(emotion)
+        if feed:
+            emotion = serializer.save(user=self.request.user)
+            feed.emotion.add(emotion)
 
 
 class EmotionDetail(
@@ -147,13 +149,13 @@ class EmotionDetail(
         instance = self.get_queryset()
 
         # check exist feed
-        get_feed(self.kwargs.get('pk'))
+        if get_feed(self.kwargs.get('pk')):
 
-        serializer = EmotionSerializer(instance, data=request.data)
+            serializer = EmotionSerializer(instance, data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
